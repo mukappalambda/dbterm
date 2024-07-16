@@ -32,37 +32,32 @@ func (q ConnectionPage) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		{
-			switch msg.Type {
-			case tea.KeyCtrlC, tea.KeyEsc:
-				return q, tea.Quit
-			case tea.KeyEnter:
-				driverType := q.TextInput.Value()
-				dbUri := q.SecondTextInput.Value()
+		switch msg.Type {
+		case tea.KeyCtrlC, tea.KeyEsc:
+			return q, tea.Quit
+		case tea.KeyEnter:
+			driverType := q.TextInput.Value()
+			dbUri := q.SecondTextInput.Value()
 
-				if !q.isValidDriverType(driverType) {
-					q.errorStr = "\nInvalid driver type.\nonly 'mysql' and 'postgres' are supported\n"
+			if !q.isValidDriverType(driverType) {
+				q.errorStr = "\nInvalid driver type.\nonly 'mysql' and 'postgres' are supported\n"
+				break
+			}
+			q.errorStr = ""
+			q.driverType = q.TextInput.Value()
+
+			if driverType != "" && dbUri != "" {
+				// connect to the database
+				var err error
+				q.db, err = connectDB(q.SecondTextInput.Value())
+
+				if err != nil {
+					q.errorStr = "\nError connecting to the database\n" + err.Error() + "\n"
 					break
 				}
-				q.errorStr = ""
-				q.driverType = q.TextInput.Value()
-
-				if driverType != "" && dbUri != "" {
-					// connect to the database
-					var err error
-					q.db, err = connectDB(q.SecondTextInput.Value())
-
-					if err != nil {
-						q.errorStr = "\nError connecting to the database\n" + err.Error() + "\n"
-						break
-					}
-
-					q.isConnected = true
-				}
-
+				q.isConnected = true
 			}
 		}
-
 	}
 
 	var cmd tea.Cmd
